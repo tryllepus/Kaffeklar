@@ -66,11 +66,13 @@ a, .btn-link {
     }
 
 .loading-progress {
-    position: relative;
+    position: absolute;
     display: block;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: 8rem;
     height: 8rem;
-    margin: 20vh auto 1rem auto;
 }
 
     .loading-progress circle {
@@ -82,21 +84,23 @@ a, .btn-link {
     }
 
         .loading-progress circle:last-child {
-            stroke: #1b6ec2;
+            stroke: #8D6E63;
             stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
             transition: stroke-dasharray 0.05s ease-in-out;
         }
 
 .loading-progress-text {
     position: absolute;
-    text-align: center;
-    font-weight: bold;
-    inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
+    top: 50%;
+    left: 50%;
+    width: 6.2rem;
+    height: 6.2rem;
+    transform: translate(-50%, -50%);
+    background-image: url('../coffee512.png');
+    background-size: cover;
+    background-position: center;
 }
 
-    .loading-progress-text:after {
-        content: var(--blazor-load-percentage-text, "Loading");
-    }
 
 code {
     color: #c02d76;

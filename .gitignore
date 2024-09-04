@@ -7,3 +7,4 @@
 /KaffeKlarRestAPI/obj
 /KaffeklarWasmClient/.vs
 /KaffeklarWasmClient/obj
+/KaffeklarWasmClient/bin/Debug/net8.0
