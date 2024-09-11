@@ -32,14 +32,10 @@ namespace KaffeKlarRestAPI.Controllers
                 if (_controller.IsPinOpen(Pin))
                 {
                     var pinValue = _controller.Read(Pin);
-                    if (pinValue == PinValue.Low)
-                    {
-                        return Ok("Coffee machine in ON");
-                    }
-                    else
-                    {
-                        return Ok("Coffee machine is OFF");
-                    }
+                    var status = pinValue == PinValue.Low ? "ON" : "OFF";
+
+                    // Returner status som JSON
+                    return Ok(new { status });
                 }
                 else
                     return BadRequest("Pin is not open.");
@@ -51,7 +47,7 @@ namespace KaffeKlarRestAPI.Controllers
         }
 
         [HttpPost("startcoffee")]
-        public async Task<ActionResult> StartCoffeeMachine([FromBody] CoffeeRequest request)
+        public ActionResult StartCoffeeMachine([FromBody] CoffeeRequest request)
         {
             try
             {
@@ -74,27 +70,44 @@ namespace KaffeKlarRestAPI.Controllers
                 // Beregn forskellen mellem nu og den ønskede tid
                 var timeToWait = targetTime - now;
 
-                // Log den tid, vi venter
-                _logger.LogInformation($"Waiting for {timeToWait.TotalMinutes} minutes until coffee machine starts at {targetTime}");
+                // Log ventetiden
+                _logger.LogInformation($"Scheduled to start coffee machine in {timeToWait.TotalMinutes} minutes at {targetTime}");
 
-                // Vent i det beregnede tidsinterval (ikke blokerende)
-                await Task.Delay(timeToWait);
+                // Start en baggrundsopgave for at vente og derefter starte kaffemaskinen
+                Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(timeToWait);
 
-                // Start kaffemaskinen
-                _controller.Write(Pin, PinValue.Low);
+                        // Start kaffemaskinen
+                        _controller.Write(Pin, PinValue.Low);
 
-                // Log at kaffemaskinen er startet
-                _logger.LogInformation($"Coffee machine started at {DateTime.Now}");
+                        // Log at kaffemaskinen er startet
+                        _logger.LogInformation($"Coffee machine started at {DateTime.Now}");
 
-                await Task.Delay(300000);
+                        // Vent 10 minutter (600.000 ms) for kaffemaskinens fuldførelse
+                        await Task.Delay(600000);
 
-                return Ok($"Coffee machine finished at {DateTime.Now}");
+                        _controller.Write(Pin, PinValue.High);
+
+                        _logger.LogInformation($"Coffee machine finished at {DateTime.Now}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Failed to start coffee machine: {ex.Message}");
+                    }
+                });
+
+                // Returnér straks svar til klienten
+                return Ok($"Coffee machine will start at {targetTime}");
             }
-            catch (Exception ex )
+            catch (Exception ex)
             {
-                return BadRequest($"Failed to start coffee machine: {ex.Message}");
+                return BadRequest($"Failed to schedule coffee machine: {ex.Message}");
             }
         }
+
 
         [HttpPost("stopcoffee")]
         public async Task<ActionResult> StopCoffeeMachine()

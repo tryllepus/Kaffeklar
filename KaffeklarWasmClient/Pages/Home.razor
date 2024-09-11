@@ -17,13 +17,22 @@
             OnClick="@StartCoffeeMachine">
             Sæt timer
         </MudButton>
+        <MudButton Style="background-color: #8D6E63; color: white;"
+                   OnClick="@StopCoffeeMachine">
+            Stop kaffemaskine
+        </MudButton>
+        <MudButton Style="background-color: #8D6E63; color: white;"
+                   OnClick="@GetCoffeeMachineStatus">
+            Tjek status
+        </MudButton>
     </div>
 </div>
 
 @code{
     public TimeSpan? currentTime;
 
-    protected override void OnInitialized(){
+    protected override void OnInitialized()
+    {
         char[] separators = new char[] { ':', '.' };
         var tempTime = DateTime.Now.ToLocalTime().ToString("HH:mm").Split(separators);
 
@@ -31,8 +40,10 @@
         Log.Information($"Time: {currentTime}");
     }
 
-    private async Task StartCoffeeMachine(){
+    private async Task StartCoffeeMachine()
+    {
         var coffeeRequest = new CoffeeRequest { Time = currentTime };
+        HttpResponseMessage response = null;
 
         // Konverter objektet til JSON-indhold
         var jsonContent = new StringContent(
@@ -41,11 +52,88 @@
             "application/json"
         );
 
-        var response = await Http.PostAsync("api/raspberrypi/startcoffee", jsonContent);
+        try
+        {
+            // Forsøger at sende POST-anmodningen
+            response = await Http.PostAsync("api/raspberrypi/startcoffee", jsonContent);
 
-        if (response.IsSuccessStatusCode)
-            Snackbar.Add("Kaffemaskinen blev startet");
-        else
-            Snackbar.Add("Fejl ved start af kaffemaskinen");
+            // Tjek om anmodningen lykkedes, før der vises en succesbesked
+            if (response != null && response.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"Kaffemaskinen starter kl. {currentTime}", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Fejl ved start af kaffemaskinen", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Hvis der opstår en undtagelse, vis en fejlbesked
+            Snackbar.Add("Kunne ikke oprette forbindelse til serveren", Severity.Error);
+            Log.Warning(ex.ToString());
+        }
+    }
+
+
+    private async Task StopCoffeeMachine()
+    {
+        HttpResponseMessage response = null;
+
+        try
+        {
+            response = await Http.PostAsync("api/raspberrypi/stopcoffee", null);
+
+            // Tjek om anmodningen lykkedes, før der vises en succesbesked
+            if (response != null && response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Kaffemaskinen blev stoppet", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Fejl ved stop af kaffemaskinen", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Kunne ikke oprette forbindelse til serveren", Severity.Error);
+            Log.Warning(ex.ToString());
+        }
+
+    }
+
+    private async Task GetCoffeeMachineStatus()
+    {
+        HttpResponseMessage response = null;
+
+        try
+        {
+            response = await Http.GetAsync("api/raspberrypi/status");
+
+            if (response != null && response.IsSuccessStatusCode)
+            {
+                // Læs indholdet af responsen korrekt
+                var content = await response.Content.ReadAsStringAsync();
+                var statusObj = JsonSerializer.Deserialize<CoffeeMachineStatus>(content);
+
+                if (statusObj != null && statusObj.Status == "OFF")
+                {
+                    Snackbar.Add("Kaffemaskinen er slukket", Severity.Info);
+                }
+                else if (statusObj != null && statusObj.Status == "ON")
+                {
+                    Snackbar.Add("Kaffemaskinen er tændt", Severity.Info);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Fejl ved læsning af status", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Kunne ikke oprette forbindelse til serveren", Severity.Error);
+            Log.Warning(ex.ToString());
+        }
     }
 }

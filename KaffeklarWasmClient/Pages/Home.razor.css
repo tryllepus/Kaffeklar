@@ -26,4 +26,9 @@
 
 .picker-actions {
     flex: 1;
+    display: flex;
+    row-gap: 5px;
+    justify-content: center;
+    align-items: center;
+    column-gap: 5px;
 }
