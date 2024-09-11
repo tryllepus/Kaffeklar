@@ -2,8 +2,14 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    background-color: #EFEBE9;
+    height: 100vh !important;   
 }
 
 main {
     flex: 1;
+}
+
+article {
+    height: 100%;
 }
