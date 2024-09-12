@@ -1,4 +1,5 @@
 using KaffeklarWasmClient;
+using KaffeklarWasmClient.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +29,7 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopCenter;
     config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
 });
+builder.Services.AddScoped<CoffeeService>();
 
 // Log setup
 var serviceProvider = builder.Services.BuildServiceProvider();

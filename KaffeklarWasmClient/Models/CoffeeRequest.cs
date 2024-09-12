@@ -1,4 +1,4 @@
-﻿namespace KaffeklarWasmClient
+﻿namespace KaffeklarWasmClient.Models
 {
     public class CoffeeRequest
     {
