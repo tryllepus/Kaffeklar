@@ -42,6 +42,9 @@
     align-items: center;
     column-gap: 5px;
 }
+    ::deep .picker-actions button {
+        min-height: 50px;
+    }
 
     ::deep .picker-actions button:disabled {
         opacity: .5;

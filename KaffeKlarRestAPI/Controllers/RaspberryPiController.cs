@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Device.Gpio;
-using KaffeKlarRestAPI.Models;
-
+using SharedComponents;
 namespace KaffeKlarRestAPI.Controllers
 {
     [ApiController]
@@ -16,33 +15,32 @@ namespace KaffeKlarRestAPI.Controllers
         {
             _logger = logger;
             _controller = controller;
-
-            // Open the pin only if it is not already open
-            if (!_controller.IsPinOpen(Pin))
-            {
-                _controller.OpenPin(Pin, PinMode.Output);
-            }
         }
 
         [HttpGet("status")]
-        public async Task<ActionResult<string>> GetStatus()
+        public async Task<ActionResult<CoffeeMachineStatus>> GetStatus()
         {
+            string status;
             try
             {
                 if (_controller.IsPinOpen(Pin))
                 {
                     var pinValue = _controller.Read(Pin);
-                    var status = pinValue == PinValue.Low ? "ON" : "OFF";
+                    status = pinValue == PinValue.Low ? "ON" : "OFF";
 
                     // Returner status som JSON
-                    return Ok(new { status });
+                    return Ok(new CoffeeMachineStatus { Status = status });
                 }
                 else
-                    return BadRequest("Pin is not open.");
+                {
+                    status = "Pin is not open.";
+                    return BadRequest(new CoffeeMachineStatus { Status = status });
+                }
             }
             catch (Exception ex)
             {
-                return BadRequest($"Failed to fetch RPI status: {ex.Message}");
+                status = $"Failed to fetch RPI status: {ex.Message}";
+                return BadRequest(new CoffeeMachineStatus { Status = status });
             }
         }
 
@@ -51,6 +49,11 @@ namespace KaffeKlarRestAPI.Controllers
         {
             try
             {
+                // Open the pin only if it is not already open
+                if (!_controller.IsPinOpen(Pin))
+                {
+                    _controller.OpenPin(Pin, PinMode.Output);
+                }
                 // Det aktuelle tidspunkt
                 var now = DateTime.Now;
 
@@ -89,7 +92,7 @@ namespace KaffeKlarRestAPI.Controllers
                         // Vent 10 minutter (600.000 ms) for kaffemaskinens fuldførelse
                         await Task.Delay(600000);
 
-                        _controller.Write(Pin, PinValue.High);
+                        await StopCoffeeMachine();
 
                         _logger.LogInformation($"Coffee machine finished at {DateTime.Now}");
                     }
@@ -115,6 +118,7 @@ namespace KaffeKlarRestAPI.Controllers
             try 
             {
                 _controller.Write(Pin, PinValue.High);
+                _controller.ClosePin(Pin);
                 return Ok("Coffee machine stopeed");
             }
             catch ( Exception ex )

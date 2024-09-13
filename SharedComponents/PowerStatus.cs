@@ -1,4 +1,4 @@
-﻿namespace KaffeklarWasmClient.Models
+﻿namespace SharedComponents
 {
     public enum PowerStatus
     {

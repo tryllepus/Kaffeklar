@@ -1,4 +1,4 @@
-﻿namespace KaffeKlarRestAPI.Models
+﻿namespace SharedComponents
 {
     public class CoffeeRequest
     {

@@ -1,9 +1,9 @@
-﻿using KaffeklarWasmClient.Models;
-using MudBlazor;
+﻿using MudBlazor;
 using Serilog;
 using static System.Net.WebRequestMethods;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
+using SharedComponents;
 
 namespace KaffeklarWasmClient.Services
 {
@@ -57,6 +57,9 @@ namespace KaffeklarWasmClient.Services
                 // Hvis der opstår en undtagelse, vis en fejlbesked
                 Snackbar.Add("Kunne ikke oprette forbindelse til serveren", Severity.Error);
                 Log.Warning(ex.ToString());
+            }
+            finally
+            {
                 StartPressed = false;
             }
         }
@@ -86,6 +89,9 @@ namespace KaffeklarWasmClient.Services
             {
                 Snackbar.Add("Kunne ikke oprette forbindelse til serveren", Severity.Error);
                 Log.Warning(ex.ToString());
+            }
+            finally
+            {
                 StopPressed = false;
             }
         }
@@ -94,25 +100,31 @@ namespace KaffeklarWasmClient.Services
         {
             Processing = true;
             HttpResponseMessage response = null;
+            CoffeeMachineStatus coffeeMachineStatus = null;
 
             try
             {
                 response = await Http.GetAsync("api/raspberrypi/status");
 
+                var content = await response.Content.ReadAsStringAsync();
+                Log.Information($"Response content: {content}");
+
+                coffeeMachineStatus = JsonSerializer.Deserialize<CoffeeMachineStatus>(content);
+                if (coffeeMachineStatus == null)
+                {
+                    Log.Error("Failed to deserialize coffee machine status.");
+                }
+
                 if (response != null && response.IsSuccessStatusCode)
                 {
                     // Læs indholdet af responsen korrekt
-                    var content = await response.Content.ReadAsStringAsync();
-                    var statusObj = JsonSerializer.Deserialize<CoffeeMachineStatus>(content);
 
-                    if (statusObj != null && statusObj.Status == "OFF")
+                    if (coffeeMachineStatus != null && coffeeMachineStatus.Status == "OFF")
                     {
-                        //Snackbar.Add("Kaffemaskinen er slukket", Severity.Info);
                         PowerChanged?.Invoke(PowerStatus.OFF);
                     }
-                    else if (statusObj != null && statusObj.Status == "ON")
+                    else if (coffeeMachineStatus != null && coffeeMachineStatus.Status == "ON")
                     {
-                        //Snackbar.Add("Kaffemaskinen er tændt", Severity.Info);
                         PowerChanged?.Invoke(PowerStatus.ON);
                     }
                 }
@@ -123,10 +135,13 @@ namespace KaffeklarWasmClient.Services
             }
             catch (Exception ex)
             {
-                Processing = false;
-                Snackbar.Add("Kunne ikke oprette forbindelse til serveren", Severity.Error);
+                Snackbar.Add($"Kunne ikke oprette forbindelse til serveren: {ex.Message}", Severity.Error);
                 PowerChanged?.Invoke(PowerStatus.UNKNOWN);
-                Log.Warning(ex.ToString());
+                Log.Warning($"Error while calling CoffeeService.GetCoffeeMachineStatus {ex}");
+            }
+            finally
+            {
+                Processing = false;
             }
         }
     }
