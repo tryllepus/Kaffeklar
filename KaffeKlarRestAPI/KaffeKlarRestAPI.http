@@ -1,6 +1,12 @@
-@KaffeKlarRestAPI_HostAddress = http://localhost:5213
+@KaffeKlarRestAPI_HostAddress = https://192.168.0.49:5001
 
-GET {{KaffeKlarRestAPI_HostAddress}}/weatherforecast/
+GET {{KaffeKlarRestAPI_HostAddress}}/api/raspberrypi/status
 Accept: application/json
 
 ###
+
+POST {{KaffeKlarRestAPI_HostAddress}}/api/raspberrypi/startcoffee
+
+###
+
+POST {{KaffeKlarRestAPI_HostAddress}}/api/raspberrypi/stopcoffee

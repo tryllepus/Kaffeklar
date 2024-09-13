@@ -1,20 +1,20 @@
 {
-  "name": "KaffeklarWasmClient",
-  "short_name": "KaffeklarWasmClient",
+  "name": "Kaffeklar",
+  "short_name": "Kaffeklar",
   "id": "./",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#8D6E63",
   "theme_color": "#03173d",
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "icon-512.png",
+      "src": "coffee512.png",
       "type": "image/png",
       "sizes": "512x512"
     },
     {
-      "src": "icon-192.png",
+      "src": "coffee192.png",
       "type": "image/png",
       "sizes": "192x192"
     }
