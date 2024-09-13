@@ -7,3 +7,9 @@
 /KaffeKlarRestAPI/obj
 /KaffeklarWasmClient/.vs
 /KaffeklarWasmClient/obj
+/KaffeKlarRestAPI/.config
+/KaffeKlarRestAPI/bin/Release/net8.0
+/KaffeklarWasmClient/bin/Release/net8.0
+/KaffeklarWasmClient/debug/net8.0/browser-wasm/KaffeKlarApp/Debug/net8.0
+/SharedComponents/bin/Release/net8.0
+/SharedComponents/obj
