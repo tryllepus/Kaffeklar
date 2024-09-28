@@ -14,3 +14,7 @@
 /KaffeklarWasmClient/debug/net8.0/browser-wasm/KaffeKlarApp/Debug/net8.0
 /SharedComponents/bin/Release/net8.0
 /SharedComponents/obj
+/KaffeklarWasmClient/Properties/PublishProfiles/FolderProfile.pubxml.user
+/KaffeKlarRestAPI/Properties/PublishProfiles/FolderProfile.pubxml.user
+/SharedComponents/.vs/SharedComponents
+/SharedComponents/bin/Debug/net8.0
