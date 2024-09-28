@@ -33,8 +33,8 @@ namespace KaffeKlarRestAPI.Controllers
                 }
                 else
                 {
-                    status = "Pin is not open.";
-                    return BadRequest(new CoffeeMachineStatus { Status = status });
+                    status = "Pin not open";
+                    return Ok(new CoffeeMachineStatus { Status = status });
                 }
             }
             catch (Exception ex)
@@ -49,31 +49,19 @@ namespace KaffeKlarRestAPI.Controllers
         {
             try
             {
-                // Open the pin only if it is not already open
-                if (!_controller.IsPinOpen(Pin))
-                {
-                    _controller.OpenPin(Pin, PinMode.Output);
-                }
-                // Det aktuelle tidspunkt
                 var now = DateTime.Now;
-
-                // Tiden som modtages fra Blazor-appen
                 var selectedTime = request.Time ?? TimeSpan.Zero;
-
-                // Opret en DateTime for den ønskede tid i dag
                 var targetTime = now.Date.Add(selectedTime);
 
-                // Hvis den ønskede tid er tidligere på dagen end det nuværende tidspunkt,
-                // antager vi, at det er den næste dag
+                // Assume timer for next day, if target time is before current time
                 if (targetTime <= now)
                 {
                     targetTime = targetTime.AddDays(1);
                 }
 
-                // Beregn forskellen mellem nu og den ønskede tid
+                // Compute time difference
                 var timeToWait = targetTime - now;
 
-                // Log ventetiden
                 _logger.LogInformation($"Scheduled to start coffee machine in {timeToWait.TotalMinutes} minutes at {targetTime}");
 
                 // Start en baggrundsopgave for at vente og derefter starte kaffemaskinen
@@ -83,13 +71,20 @@ namespace KaffeKlarRestAPI.Controllers
                     {
                         await Task.Delay(timeToWait);
 
-                        // Start kaffemaskinen
-                        _controller.Write(Pin, PinValue.Low);
+                        // We open pin just before turning it on to mitigate risk of residual power in relay
+                        // Alternative solution: Open pin in constructor, but immediately write PinValue.High so power off relay
+                        if (!_controller.IsPinOpen(Pin))
+                        {
+                            _controller.OpenPin(Pin, PinMode.Output);
+                            _logger.LogInformation($"Pin {Pin} was opened.");
+                        }
 
-                        // Log at kaffemaskinen er startet
+                        _controller.Write(Pin, PinValue.Low);
                         _logger.LogInformation($"Coffee machine started at {DateTime.Now}");
 
-                        // Vent 10 minutter (600.000 ms) for kaffemaskinens fuldførelse
+                        _logger.LogInformation("Waiting 10 minutes for coffee machine to complete...");
+                        // Bug: If coffee machine is manually shut down via app while still waiting for the task to complete
+                        // The task will complete the next time the coffee machine is activated and shut it down immediately
                         await Task.Delay(600000);
 
                         await StopCoffeeMachine();
@@ -119,7 +114,7 @@ namespace KaffeKlarRestAPI.Controllers
             {
                 _controller.Write(Pin, PinValue.High);
                 _controller.ClosePin(Pin);
-                return Ok("Coffee machine stopeed");
+                return Ok("Coffee machine stopped");
             }
             catch ( Exception ex )
             {
@@ -133,7 +128,7 @@ namespace KaffeKlarRestAPI.Controllers
             if (_controller.IsPinOpen(Pin))
             {
                 _controller.ClosePin(Pin); // Close the pin when done
-                _logger.LogInformation("Pin was closed");
+                _logger.LogInformation($"Pin {Pin} was closed");
             }
             _controller.Dispose(); // Dispose of the GpioController
         }

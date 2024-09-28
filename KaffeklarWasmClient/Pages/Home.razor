@@ -85,7 +85,7 @@
 
         CoffeeService.PowerChanged += OnPowerStatusChanged;
 
-        // await CoffeeService.GetCoffeeMachineStatus();
+        await CoffeeService.GetCoffeeMachineStatus();
     }
 
     private void OnPowerStatusChanged(PowerStatus newStatus){

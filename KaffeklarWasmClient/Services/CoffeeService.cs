@@ -31,7 +31,7 @@ namespace KaffeklarWasmClient.Services
 
             // Konverter objektet til JSON-indhold
             var jsonContent = new StringContent(
-                System.Text.Json.JsonSerializer.Serialize(coffeeRequest),
+                JsonSerializer.Serialize(coffeeRequest),
                 System.Text.Encoding.UTF8,
                 "application/json"
             );
@@ -119,7 +119,7 @@ namespace KaffeklarWasmClient.Services
                 {
                     // Læs indholdet af responsen korrekt
 
-                    if (coffeeMachineStatus != null && coffeeMachineStatus.Status == "OFF")
+                    if (coffeeMachineStatus != null && (coffeeMachineStatus.Status == "OFF" || coffeeMachineStatus.Status == "Pin not open"))
                     {
                         PowerChanged?.Invoke(PowerStatus.OFF);
                     }
